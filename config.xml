@@ -20,7 +20,6 @@
   <preference name="disable-cursor" value="false"/>
   <preference name="android-minSdkVersion" value="9"/>
   <preference name="android-installLocation" value="auto"/>
-  <plugin name="Storage" value="org.apache.cordova.Storage" />
   <gap:platform name="android" /> 
   <icon src="www/icon.png"/>
   <icon src="www/res/icon/android/icon-36-ldpi.png" gap:platform="android" gap:qualifier="ldpi"/>
