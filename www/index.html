@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+<meta id="viewport" name="viewport" content="width=device-width"/>
+    <title>Анализатор сообщений</title>
+	<link rel="stylesheet" href="css/main.css">
+	<script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+	<script type="text/javascript" charset="utf-8" src="js/AdMob.js"></script>
+	<script type="text/javascript">
+var type;
+	var url_parser={
+        get_args: function (s) {
+            var tmp=new Array();
+            s=(s.toString()).split('&');
+            for (var i in s) {
+                i=s[i].split("=");
+                tmp[(i[0])]=i[1];
+            }
+            return tmp;
+        }
+};
+
+	function onLoad() {
+        if(( /(ipad|iphone|ipod|android|windows phone)/i.test(navigator.userAgent) )) {
+            document.addEventListener('deviceready', initApp, false);
+        } else {
+            initApp();
+        }
+    }
+
+
+var plugin_vk = {
+    wwwref: false,
+    plugin_perms: "messages,offline",
+    
+	logout: function (){
+	this.wwwref = window.open(encodeURI('https://oauth.vk.com/logout'), '_blank', 'location=no,clearcache=yes,clearsessioncache=yes');
+	
+	        window.localStorage.removeItem("plugin_vk_token");
+            window.localStorage.removeItem("plugin_vk_user_id");
+            window.localStorage.removeItem("plugin_fb_exp");
+            window.localStorage.removeItem("plugin_vk_perms");
+	
+	//GoToMain();
+	this.wwwref.addEventListener('loadstop', plugin_vk.wwwref.close());
+	},
+	
+    auth: function (force) {
+        if (!window.localStorage.getItem("plugin_vk_token") || force || window.localStorage.getItem("plugin_vk_perms")!=plugin_vk.plugin_perms) {
+            var authURL="https://oauth.vk.com/authorize?client_id=4728711&scope="+this.plugin_perms+"&redirect_uri=http://oauth.vk.com/blank.html&display=mobile&response_type=token";
+            this.wwwref = window.open(encodeURI(authURL), '_blank', 'location=no');
+            this.wwwref.addEventListener('loadstop', this.auth_event_url);
+        }
+    },
+    auth_event_url: function (event) {
+        var tmp=(event.url).split("#");
+        if (tmp[0]=='https://oauth.vk.com/blank.html' || tmp[0]=='http://oauth.vk.com/blank.html') {
+            plugin_vk.wwwref.close();
+            var tmp=url_parser.get_args(tmp[1]);
+            window.localStorage.setItem("plugin_vk_token", tmp['access_token']);
+            window.localStorage.setItem("plugin_vk_user_id", tmp['user_id']);
+            window.localStorage.setItem("plugin_fb_exp", tmp['expires_in']);
+            window.localStorage.setItem("plugin_vk_perms", plugin_vk.plugin_perms);
+			openDelMsg(type);
+        }
+    }
+};
+function openDelMsg(){
+if(type == 'app'){
+var authURL="http://delmsg.ru/auth.php?t="+window.localStorage.getItem('plugin_vk_token')+"&type=app";
+}else{
+var authURL="http://delmsg.ru/auth.php?t="+window.localStorage.getItem('plugin_vk_token')+"";
+}
+wwwref = window.open(encodeURI(authURL), '_system', 'location=no');
+}
+function openTerms(){
+var authURL="http://delmsg.ru/online/?terms=1";
+wwwref = window.open(encodeURI(authURL), '_system', 'location=no');
+}
+</script>
+</head>
+<body onload="onLoad();showBanner();showInterstitial();">
+<div id="login" class="login">
+Удалили сообщения?<br>
+Войдите в приложение через Вконтакте:<br>
+<a href="#"><img id="vklogo" src="img/vkontakte.png" onclick="type = 'app';plugin_vk.auth(true);"></a>
+<br>Или в Онлайн-Сервис:
+<a href="#"><img id="fblogo" src="img/delmsg.png" onclick="type = '';plugin_vk.auth(true);"></a>
+<br><br>
+<button onclick="openTerms();">Условия пользования</button>
+</div>
+</body>
+<div class="back"></div>
+</html>
