@@ -5,11 +5,19 @@
 
     <script type="text/javascript" charset="utf-8" src="cordova-2.0.0.js"></script>
     <script type="text/javascript" charset="utf-8">
-		window.open = cordova.InAppBrowser.open;
+	
+	
+	document.addEventListener("deviceready", onDeviceReady, false);
+	function onDeviceReady() {
+		alert("window.open works well");
+		var ref = cordova.InAppBrowser.open('http://apache.org', '_blank', 'location=yes');
+	}
+	
+		
     </script>
   </head>
   <body>
     <h1>Example</h1>
-    <p onclick='window.open("http://etka.autovv.ru", "_system", "location=no");'>Database</p>
+    <p>Database</p>
   </body>
 </html>
