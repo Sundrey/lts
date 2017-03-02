@@ -1,95 +1,203 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
 <html>
-  <head>
-  <meta charset="utf-8">
-<meta id="viewport" name="viewport" content="width=device-width"/>
-    <title>Анализатор сообщений</title>
-	<link rel="stylesheet" href="css/main.css">
-	<script type="text/javascript" charset="utf-8" src="cordova.js"></script>
-	<script type="text/javascript" charset="utf-8" src="js/AdMob.js"></script>
-	<script type="text/javascript">
-var type;
-	var url_parser={
-        get_args: function (s) {
-            var tmp=new Array();
-            s=(s.toString()).split('&');
-            for (var i in s) {
-                i=s[i].split("=");
-                tmp[(i[0])]=i[1];
-            }
-            return tmp;
-        }
-};
+<head>
 
-	function onLoad() {
-        if(( /(ipad|iphone|ipod|android|windows phone)/i.test(navigator.userAgent) )) {
-            document.addEventListener('deviceready', initApp, false);
-        } else {
-            initApp();
-        }
-    }
+<!--
+This is an example that shows how to create an application that uses
+an embedded sqlite database
+in a mobile device (iphone,ipod,ipad,android using phonegap, jquery
+and sqlite.
 
+Your phonegap project will already contain the phonegap.js.
 
-var plugin_vk = {
-    wwwref: false,
-    plugin_perms: "messages,offline",
-    
-	logout: function (){
-	this.wwwref = window.open(encodeURI('https://oauth.vk.com/logout'), '_blank', 'location=no,clearcache=yes,clearsessioncache=yes');
-	
-	        window.localStorage.removeItem("plugin_vk_token");
-            window.localStorage.removeItem("plugin_vk_user_id");
-            window.localStorage.removeItem("plugin_fb_exp");
-            window.localStorage.removeItem("plugin_vk_perms");
-	
-	//GoToMain();
-	this.wwwref.addEventListener('loadstop', plugin_vk.wwwref.close());
-	},
-	
-    auth: function (force) {
-        if (!window.localStorage.getItem("plugin_vk_token") || force || window.localStorage.getItem("plugin_vk_perms")!=plugin_vk.plugin_perms) {
-            var authURL="https://oauth.vk.com/authorize?client_id=4728711&scope="+this.plugin_perms+"&redirect_uri=http://oauth.vk.com/blank.html&display=mobile&response_type=token";
-            this.wwwref = window.open(encodeURI(authURL), '_blank', 'location=no');
-            this.wwwref.addEventListener('loadstop', this.auth_event_url);
+You will need to download and add to your project the jquery.min.js
+file
+
+The application will create a database called WebSqlDb with a
+table in it called User, which contains three fields  UserId,
+FirstName and LastName
+
+When the application is run the firsttime, if the local database does
+not exist, the application
+will create the database and the table.
+
+The application shows two text boxes which you can use to add values
+to the database using the add record button
+
+The application also has a refresh button which will get the data from
+the database and show it on the screen
+
+When the application is run on the device the onBodyLoad() function is
+called, which sets up the database and table
+
+The Add Record button calls the AddValueToDB() function
+
+The Refresh button calls the ListDBValues() function
+
+There are a few alert statements in this application, which are only
+there for debuggin purposes.  They look like this
+alert("DEBUGGING: followed by some text");
+
+These are only in the application to indicate where the application is
+at when it is processing functions, etc
+
+You will need to comment these out before you deploy/sell your
+application
+
+-->
+
+<!-- Change this if you want to allow scaling -->
+   <meta name="viewport" content="width=default-width; user-
+scalable=no" />
+   <meta http-equiv="Content-type" content="text/html;charset=utf-8">
+
+   <title>Embedded Sql Example</title>
+
+<!-- include the next line to use phonegap javascript functions -->
+    <script type="text/javascript" charset="utf-8" src="phonegap.js"></
+script>
+
+<!-- include the next line to use jquery functions in your application
+you must download this and include the directory your html file is in
+-->
+        <script type="text/javascript" charset="utf-8" src="jquery.min.js"></
+script>
+
+<!-- main scripts used in this example -->
+ <script type="text/javascript" charset="utf-8">
+
+// global variables
+var db;
+var shortName = 'WebSqlDB';
+var version = '1.0';
+var displayName = 'WebSqlDB';
+var maxSize = 65535;
+
+// this is called when an error happens in a transaction
+function errorHandler(transaction, error) {
+   alert('Error: ' + error.message + ' code: ' + error.code);
+
+}
+
+// this is called when a successful transaction happens
+function successCallBack() {
+   alert("DEBUGGING: success");
+
+}
+
+function nullHandler(){};
+
+// called when the application loads
+function onBodyLoad(){
+
+// This alert is used to make sure the application is loaded correctly
+// you can comment this out once you have the application working
+alert("DEBUGGING: we are in the onBodyLoad() function");
+
+ if (!window.openDatabase) {
+   // not all mobile devices support databases  if it does not, the
+following alert will display
+   // indicating the device will not be albe to run this application
+   alert('Databases are not supported in this browser.');
+   return;
+ }
+
+// this line tries to open the database base locally on the device
+// if it does not exist, it will create it and return a database
+object stored in variable db
+ db = openDatabase(shortName, version, displayName,maxSize);
+
+// this line will try to create the table User in the database just
+created/openned
+ db.transaction(function(tx){
+
+  // you can uncomment this next line if you want the User table to be
+empty each time the application runs
+  // tx.executeSql( 'DROP TABLE User',nullHandler,nullHandler);
+
+  // this line actually creates the table User if it does not exist
+and sets up the three columns and their types
+  // note the UserId column is an auto incrementing column which is
+useful if you want to pull back distinct rows
+  // easily from the table.
+   tx.executeSql( 'CREATE TABLE IF NOT EXISTS User(UserId INTEGER NOT
+NULL PRIMARY KEY, FirstName TEXT NOT NULL, LastName TEXT NOT NULL)',
+[],nullHandler,errorHandler);
+ },errorHandler,successCallBack);
+
+}
+
+// list the values in the database to the screen using jquery to
+update the #lbUsers element
+function ListDBValues() {
+
+ if (!window.openDatabase) {
+  alert('Databases are not supported in this browser.');
+  return;
+ }
+
+// this line clears out any content in the #lbUsers element on the
+page so that the next few lines will show updated
+// content and not just keep repeating lines
+ $('#lbUsers').html('');
+
+// this next section will select all the content from the User table
+and then go through it row by row
+// appending the UserId  FirstName  LastName to the  #lbUsers element
+on the page
+ db.transaction(function(transaction) {
+   transaction.executeSql('SELECT * FROM User;', [],
+     function(transaction, result) {
+      if (result != null && result.rows != null) {
+        for (var i = 0; i < result.rows.length; i++) {
+          var row = result.rows.item(i);
+          $('#lbUsers').append('<br>' + row.UserId + '. ' +
+row.FirstName+ ' ' + row.LastName);
         }
-    },
-    auth_event_url: function (event) {
-        var tmp=(event.url).split("#");
-        if (tmp[0]=='https://oauth.vk.com/blank.html' || tmp[0]=='http://oauth.vk.com/blank.html') {
-            plugin_vk.wwwref.close();
-            var tmp=url_parser.get_args(tmp[1]);
-            window.localStorage.setItem("plugin_vk_token", tmp['access_token']);
-            window.localStorage.setItem("plugin_vk_user_id", tmp['user_id']);
-            window.localStorage.setItem("plugin_fb_exp", tmp['expires_in']);
-            window.localStorage.setItem("plugin_vk_perms", plugin_vk.plugin_perms);
-			openDelMsg(type);
-        }
-    }
-};
-function openDelMsg(){
-if(type == 'app'){
-var authURL="http://delmsg.ru/auth.php?t="+window.localStorage.getItem('plugin_vk_token')+"&type=app";
-}else{
-var authURL="http://delmsg.ru/auth.php?t="+window.localStorage.getItem('plugin_vk_token')+"";
+      }
+     },errorHandler);
+ },errorHandler,nullHandler);
+
+ return;
+
 }
-wwwref = window.open(encodeURI(authURL), '_system', 'location=no');
+
+// this is the function that puts values into the database using the
+values from the text boxes on the screen
+function AddValueToDB() {
+
+ if (!window.openDatabase) {
+   alert('Databases are not supported in this browser.');
+   return;
+ }
+
+// this is the section that actually inserts the values into the User
+table
+ db.transaction(function(transaction) {
+   transaction.executeSql('INSERT INTO User(FirstName, LastName)
+VALUES (?,?)',[$('#txFirstName').val(), $('#txLastName').val()],
+     nullHandler,errorHandler);
+   });
+
+// this calls the function that will show what is in the User table in
+the database
+ ListDBValues();
+
+ return false;
+
 }
-function openTerms(){
-var authURL="http://delmsg.ru/online/?terms=1";
-wwwref = window.open(encodeURI(authURL), '_system', 'location=no');
-}
+
 </script>
 </head>
-<body onload="onLoad();showBanner();showInterstitial();">
-<div id="login" class="login">
-Удалили сообщения?<br>
-Войдите в приложение через Вконтакте:<br>
-<a href="#"><img id="vklogo" src="img/vkontakte.png" onclick="type = 'app';plugin_vk.auth(true);"></a>
-<br>Или в Онлайн-Сервис:
-<a href="#"><img id="fblogo" src="img/delmsg.png" onclick="type = '';plugin_vk.auth(true);"></a>
-<br><br>
-<button onclick="openTerms();">Условия пользования</button>
-</div>
+<body onload="onBodyLoad()">
+<h1>WebSQL</h1>
+<input id="txFirstName" type="text" placeholder="FirstName">
+<input id="txLastName" type="text" placeholder="Last Name">
+<input type="button" value="Add record" onClick="AddValueToDB()">
+<input type="button" value="Refresh" onClick="ListDBValues()"> <br>
+<br>
+<span style="font-weight:bold;">Currently stored values:</span>
+<span id="lbUsers"></span>
 </body>
-<div class="back"></div>
 </html>
