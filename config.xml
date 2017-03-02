@@ -20,8 +20,6 @@
   <preference name="disable-cursor" value="false"/>
   <preference name="android-minSdkVersion" value="9"/>
   <preference name="android-installLocation" value="auto"/>
-  <gap:plugin name="org.apache.cordova.inappbrowser"/>
-  <gap:plugin name="cordova-plugin-admob" source="npm"/>
   <gap:platform name="android" /> 
   <icon src="icon.png"/>
   <icon src="www/res/icon/android/icon-36-ldpi.png" gap:platform="android" gap:qualifier="ldpi"/>
